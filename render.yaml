@@ -1,0 +1,146 @@
+# Render Blueprint — deploys the whole stack on Render's free tier.
+#
+# Services (all "web" so they qualify for the free plan and get an onrender URL):
+#   - medicine-db        Postgres (free)
+#   - user-service       Spring Boot (Docker)  -> talks to medicine-db
+#   - medicine-service   Spring Boot (Docker)  -> talks to medicine-db
+#   - api-gateway        Spring Cloud Gateway  -> routes to the two services
+#   - frontend           static site (React build)
+#
+# The JWT secret is generated once on user-service and shared with
+# medicine-service via a fromService reference, so both sign/verify with the
+# same key.
+
+databases:
+  - name: medicine-db
+    databaseName: medicine_db
+    plan: free
+    region: oregon
+
+services:
+  # ---------------- user-service ----------------
+  - type: web
+    name: user-service
+    runtime: docker
+    plan: free
+    region: oregon
+    rootDir: user-service
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SERVER_PORT
+        value: "8081"
+      # Pull the DB's individual pieces from Render. The app assembles the
+      # jdbc: URL itself (see application.properties), so no format mismatch.
+      - key: DB_HOST
+        fromDatabase:
+          name: medicine-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: medicine-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: medicine-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: medicine-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: medicine-db
+          property: password
+      # Shared signing secret — generated here, referenced by medicine-service.
+      - key: JWT_SECRET
+        generateValue: true
+
+  # ---------------- medicine-service ----------------
+  - type: web
+    name: medicine-service
+    runtime: docker
+    plan: free
+    region: oregon
+    rootDir: medicine-service
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SERVER_PORT
+        value: "8082"
+      - key: DB_HOST
+        fromDatabase:
+          name: medicine-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: medicine-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: medicine-db
+          property: database
+      - key: DB_USERNAME
+        fromDatabase:
+          name: medicine-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: medicine-db
+          property: password
+      # Reuse the exact same secret value generated on user-service.
+      - key: JWT_SECRET
+        fromService:
+          name: user-service
+          type: web
+          envVarKey: JWT_SECRET
+
+  # ---------------- api-gateway ----------------
+  - type: web
+    name: api-gateway
+    runtime: docker
+    plan: free
+    region: oregon
+    rootDir: api-gateway
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /actuator/health
+    envVars:
+      - key: SERVER_PORT
+        value: "8080"
+      # Internal (private network) URLs of the two backend services.
+      - key: USER_SERVICE_URI
+        fromService:
+          name: user-service
+          type: web
+          property: hostport
+      - key: MEDICINE_SERVICE_URI
+        fromService:
+          name: medicine-service
+          type: web
+          property: hostport
+      # Allowed browser origin = the deployed frontend URL.
+      - key: CORS_ALLOWED_ORIGIN
+        fromService:
+          name: frontend
+          type: web
+          property: host
+
+  # ---------------- frontend (static site) ----------------
+  - type: web
+    name: frontend
+    runtime: static
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    staticPublishPath: ./dist
+    envVars:
+      # Frontend calls the gateway directly (its public onrender URL).
+      - key: VITE_API_BASE_URL
+        fromService:
+          name: api-gateway
+          type: web
+          property: host
+    routes:
+      # SPA fallback: serve index.html for client-side routes.
+      - type: rewrite
+        source: /*
+        destination: /index.html

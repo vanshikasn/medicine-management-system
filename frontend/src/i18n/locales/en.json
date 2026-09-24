@@ -1,0 +1,59 @@
+{
+  "appTitle": "Medicine Catalog",
+  "nav": {
+    "browse": "Browse",
+    "owner": "Owner",
+    "login": "Login",
+    "logout": "Logout"
+  },
+  "login": {
+    "heading": "Login",
+    "mobile": "Mobile number",
+    "otp": "OTP",
+    "requestOtp": "Request OTP",
+    "verify": "Verify",
+    "back": "Back",
+    "otpSentTo": "Enter the OTP sent to {{mobile}} (dev OTP: 123456)",
+    "mobileRequired": "Please enter your mobile number",
+    "otpRequired": "Please enter the OTP",
+    "requestFailed": "Could not request OTP. Please try again.",
+    "verifyFailed": "Invalid or expired OTP. Please try again."
+  },
+  "user": {
+    "heading": "Available Medicines",
+    "searchPlaceholder": "Search medicines by name",
+    "empty": "No medicines found.",
+    "loading": "Loading medicines...",
+    "price": "Price",
+    "inStock": "In stock"
+  },
+  "owner": {
+    "heading": "Manage Medicines",
+    "addHeading": "Add a Medicine",
+    "editHeading": "Edit Medicine",
+    "name": "Name",
+    "description": "Description",
+    "price": "Price",
+    "quantity": "Quantity",
+    "add": "Add Medicine",
+    "save": "Save Changes",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "empty": "No medicines yet. Add your first one above.",
+    "loading": "Loading...",
+    "confirmDelete": "Delete this medicine?"
+  },
+  "messages": {
+    "added": "Medicine added",
+    "updated": "Medicine updated",
+    "deleted": "Medicine deleted",
+    "error": "Something went wrong. Please try again."
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "priceRequired": "Price is required",
+    "quantityRequired": "Quantity is required",
+    "nonNegative": "Value cannot be negative"
+  }
+}

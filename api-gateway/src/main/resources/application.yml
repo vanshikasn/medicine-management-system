@@ -1,0 +1,36 @@
+server:
+  # Single entry point the frontend / ALB talks to.
+  port: ${SERVER_PORT:8080}
+
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      # Central CORS: allow the frontend origin to call the gateway.
+      # In prod, if the frontend is served on the same domain (CloudFront -> /api),
+      # CORS is effectively a no-op; the allowed origin can still be set via env.
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins:
+              - ${CORS_ALLOWED_ORIGIN:http://localhost:5173}
+            allowedMethods:
+              - GET
+              - POST
+              - PUT
+              - DELETE
+              - OPTIONS
+            allowedHeaders: "*"
+            allowCredentials: true
+      routes:
+        # Auth calls -> user-service
+        - id: user-service
+          uri: ${USER_SERVICE_URI:http://localhost:8081}
+          predicates:
+            - Path=/api/auth/**
+        # Medicine calls -> medicine-service
+        - id: medicine-service
+          uri: ${MEDICINE_SERVICE_URI:http://localhost:8082}
+          predicates:
+            - Path=/api/medicines/**
