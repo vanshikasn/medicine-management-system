@@ -8,12 +8,20 @@ import axios from 'axios'
 // VITE_API_BASE_URL at build time (e.g. "/api" when the frontend and API are
 // served behind the same CloudFront domain, or the full gateway URL otherwise).
 let rawBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+
+// If Render injected a bare private service hostname (e.g. "api-gateway-v9an" without a domain)
+if (rawBase && !rawBase.includes('.') && !rawBase.includes('localhost') && !rawBase.startsWith('/')) {
+  rawBase = `${rawBase}.onrender.com`
+}
+
 if (rawBase && !rawBase.startsWith('http://') && !rawBase.startsWith('https://') && !rawBase.startsWith('/')) {
   rawBase = `https://${rawBase}`
 }
+
 if (rawBase && !rawBase.endsWith('/api') && !rawBase.includes('/api/')) {
   rawBase = `${rawBase.replace(/\/+$/, '')}/api`
 }
+
 const baseURL = rawBase
 
 const api = axios.create({
