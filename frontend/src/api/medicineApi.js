@@ -7,7 +7,14 @@ import axios from 'axios'
 // In dev this defaults to the local gateway. In production, set
 // VITE_API_BASE_URL at build time (e.g. "/api" when the frontend and API are
 // served behind the same CloudFront domain, or the full gateway URL otherwise).
-const baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+let rawBase = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api'
+if (rawBase && !rawBase.startsWith('http://') && !rawBase.startsWith('https://') && !rawBase.startsWith('/')) {
+  rawBase = `https://${rawBase}`
+}
+if (rawBase && !rawBase.endsWith('/api') && !rawBase.includes('/api/')) {
+  rawBase = `${rawBase.replace(/\/+$/, '')}/api`
+}
+const baseURL = rawBase
 
 const api = axios.create({
   baseURL,

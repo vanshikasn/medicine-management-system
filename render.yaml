@@ -109,21 +109,12 @@ services:
         value: "8080"
       # Internal (private network) URLs of the two backend services.
       - key: USER_SERVICE_URI
-        fromService:
-          name: user-service
-          type: web
-          property: hostport
+        value: http://user-service:8081
       - key: MEDICINE_SERVICE_URI
-        fromService:
-          name: medicine-service
-          type: web
-          property: hostport
-      # Allowed browser origin = the deployed frontend URL.
+        value: http://medicine-service:8082
+      # Allowed browser origin = deployed frontend on Render
       - key: CORS_ALLOWED_ORIGIN
-        fromService:
-          name: frontend
-          type: web
-          property: host
+        value: https://*.onrender.com
 
   # ---------------- frontend (static site) ----------------
   - type: web
